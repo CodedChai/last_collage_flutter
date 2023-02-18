@@ -23,7 +23,6 @@ class Album {
     json['image'].forEach((v) {
       images.add(Image.fromJson(v));
     });
-    print(images);
 
     return Album(
       artist: Artist.fromJson(json['artist']),

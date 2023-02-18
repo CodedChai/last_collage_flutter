@@ -14,11 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Last Collage',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Last Collage'),
     );
   }
 }
@@ -35,7 +35,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   static const urlPrefix = 'http://ws.audioscrobbler.com/2.0';
   static const lastFm =
-      '/?method=user.gettopalbums&user=guardianx1015&api_key=key&format=json&period=7day';
+      '/?method=user.gettopalbums&user=guardianx1015&api_key=key&format=json&period=7day&limit=25';
 
   late Future<TopAlbums> futureTopAlbums;
 
@@ -44,7 +44,6 @@ class _MyHomePageState extends State<MyHomePage> {
     Response response = await get(url);
     var jsonResponse = jsonDecode(response.body);
     var topAlbums = TopAlbums.fromJson(jsonResponse);
-    print(topAlbums);
     return topAlbums;
   }
 
@@ -60,11 +59,26 @@ class _MyHomePageState extends State<MyHomePage> {
       future: futureTopAlbums,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          var albums = snapshot.data!.albums;
+          var photos = GridView.builder(
+            physics: const ScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 1.0,
+              mainAxisSpacing: 1.0,
+            ),
+            itemCount: albums.length,
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            itemBuilder: (context, index) {
+              return Image.network(albums[index].images[3].text);
+            },
+          );
           // var names = snapshot.data!.albums.map((e) => Text(e.name)).toList();
           // return ListView(
           //   children: names,
           // );
-          return Text('Found stuff');
+          return photos;
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
@@ -80,8 +94,12 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            apiGetWidget,
+          children: [
+            SingleChildScrollView(
+              physics: const ScrollPhysics(),
+              primary: true,
+              child: apiGetWidget,
+            ),
           ],
         ),
       ),
