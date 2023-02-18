@@ -35,35 +35,36 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   static const urlPrefix = 'http://ws.audioscrobbler.com/2.0';
   static const lastFm =
-      '$urlPrefix/?method=user.gettopalbums&user=guardianx1015&api_key=a1967a04fb07ae83a6d162cdfbfe5b94&format=json&period=7day';
+      '/?method=user.gettopalbums&user=guardianx1015&api_key=key&format=json&period=7day';
 
-  late Future<String> futureString;
+  late Future<TopAlbums> futureTopAlbums;
 
-  Future<String> makeGetRequest() async {
-    final url = Uri.parse('$lastFm');
+  Future<TopAlbums> makeGetRequest() async {
+    final url = Uri.parse('$urlPrefix$lastFm');
     Response response = await get(url);
     var jsonResponse = jsonDecode(response.body);
     var topAlbums = TopAlbums.fromJson(jsonResponse);
     print(topAlbums);
-    print('Status code: ${response.statusCode}');
-    print('Headers: ${response.headers}');
-    print('Body: ${response.body}');
-    return response.body;
+    return topAlbums;
   }
 
   @override
   void initState() {
     super.initState();
-    futureString = makeGetRequest();
+    futureTopAlbums = makeGetRequest();
   }
 
   @override
   Widget build(BuildContext context) {
     var apiGetWidget = FutureBuilder(
-      future: futureString,
+      future: futureTopAlbums,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return Text(snapshot.data!);
+          // var names = snapshot.data!.albums.map((e) => Text(e.name)).toList();
+          // return ListView(
+          //   children: names,
+          // );
+          return Text('Found stuff');
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
