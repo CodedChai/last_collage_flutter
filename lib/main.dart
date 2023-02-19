@@ -39,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
+  Widget apiWidget = const Text('');
   static const urlPrefix = 'http://ws.audioscrobbler.com/2.0';
 
   Future<TopAlbums> makeGetRequest(String username) async {
@@ -96,8 +97,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Widget apiWidget = const Text('');
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,7 +131,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () {
                     // Validate returns true if the form is valid, or false otherwise.
                     //  if (_formKey.currentState!.validate()) {
-                    apiWidget = buildAlbumWidget(textEditingController.text);
+                    setState(() {
+                      apiWidget = buildAlbumWidget(textEditingController.text);
+                    });
                     // If the form is valid, display a snackbar. In the real world,
                     // you'd often call a server or save the information in a database.
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -142,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                     //    }
                   },
-                  child: const Text('Submit'),
+                  child: const Text('Collage!'),
                 ),
               ),
               Expanded(
