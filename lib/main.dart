@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:last_collage/TopAlbums.dart';
@@ -33,13 +34,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
   static const urlPrefix = 'http://ws.audioscrobbler.com/2.0';
-  static const lastFm =
-      '/?method=user.gettopalbums&user=guardianx1015&api_key=key&format=json&period=7day&limit=25';
 
-  late Future<TopAlbums> futureTopAlbums;
-
-  Future<TopAlbums> makeGetRequest() async {
+  Future<TopAlbums> makeGetRequest(String username) async {
+    String lastFm =
+        '/?method=user.gettopalbums&user=$username&api_key=key&format=json&period=7day&limit=16';
     final url = Uri.parse('$urlPrefix$lastFm');
     Response response = await get(url);
     var jsonResponse = jsonDecode(response.body);
@@ -47,15 +51,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return topAlbums;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    futureTopAlbums = makeGetRequest();
-  }
+  Widget buildAlbumWidget(String username) {
+    Future<TopAlbums> futureTopAlbums = makeGetRequest(username);
 
-  @override
-  Widget build(BuildContext context) {
-    var apiGetWidget = FutureBuilder(
+    return FutureBuilder(
       future: futureTopAlbums,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -63,21 +62,20 @@ class _MyHomePageState extends State<MyHomePage> {
           var photos = GridView.builder(
             physics: const ScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              crossAxisSpacing: 1.0,
-              mainAxisSpacing: 1.0,
+              crossAxisCount: 4,
+              crossAxisSpacing: 0.1,
+              mainAxisSpacing: 0.1,
             ),
             itemCount: albums.length,
             shrinkWrap: true,
             scrollDirection: Axis.vertical,
             itemBuilder: (context, index) {
-              return Image.network(albums[index].images[3].text);
+              return CachedNetworkImage(
+                  placeholder: (context, url) =>
+                      const CircularProgressIndicator(),
+                  imageUrl: albums[index].images.last.text);
             },
           );
-          // var names = snapshot.data!.albums.map((e) => Text(e.name)).toList();
-          // return ListView(
-          //   children: names,
-          // );
           return photos;
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
@@ -86,21 +84,72 @@ class _MyHomePageState extends State<MyHomePage> {
         return const CircularProgressIndicator();
       },
     );
+  }
 
+  final _formKey = GlobalKey<FormState>();
+  final textEditingController = TextEditingController();
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    textEditingController.dispose();
+    super.dispose();
+  }
+
+  Widget apiWidget = const Text('');
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SingleChildScrollView(
-              physics: const ScrollPhysics(),
-              primary: true,
-              child: apiGetWidget,
-            ),
-          ],
+        child: Form(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Enter your last.fm username',
+                  ),
+                  controller: textEditingController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Must not be empty';
+                    }
+                    return value;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Validate returns true if the form is valid, or false otherwise.
+                    //  if (_formKey.currentState!.validate()) {
+                    apiWidget = buildAlbumWidget(textEditingController.text);
+                    // If the form is valid, display a snackbar. In the real world,
+                    // you'd often call a server or save the information in a database.
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Getting albums for ${textEditingController.text}')),
+                    );
+                    //    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ),
+              Expanded(
+                child: apiWidget,
+              ),
+            ],
+          ),
         ),
       ),
     );
