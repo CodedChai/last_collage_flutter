@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   http: ^0.13.5
   cached_network_image: ^3.2.3
+  quiver: ^3.2.1
+  stroke_text: any
 
 dev_dependencies:
   flutter_test:

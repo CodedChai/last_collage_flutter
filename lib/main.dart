@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:last_collage/Album.dart';
 import 'package:last_collage/TopAlbums.dart';
+import 'package:stroke_text/stroke_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,31 +62,59 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           var albums = snapshot.data!.albums;
-          var photos = GridView.builder(
-            physics: const ScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 0.1,
-              mainAxisSpacing: 0.1,
-            ),
-            itemCount: albums.length,
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) {
-              return CachedNetworkImage(
-                  placeholder: (context, url) =>
-                      const CircularProgressIndicator(),
-                  imageUrl: albums[index].images.last.text);
-            },
-          );
-          return photos;
+
+          return buildLayout(albums);
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
 
-        return const CircularProgressIndicator();
+        return Container(
+            width: 30, height: 30, child: const CircularProgressIndicator());
       },
     );
+  }
+
+  Widget buildAlbumInfo(Album album) {
+    return Stack(
+      children: [
+        CachedNetworkImage(
+            placeholder: (context, url) => const CircularProgressIndicator(),
+            imageUrl: album.images.last.text),
+        Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StrokeText(
+                text: album.artist.name,
+                strokeWidth: 1.3,
+              ),
+              StrokeText(
+                text: album.name,
+                strokeWidth: 1.3,
+              ),
+              StrokeText(
+                text: "Play count: ${album.playcount}",
+                strokeWidth: 1.3,
+              ),
+            ])
+      ],
+    );
+  }
+
+  LayoutBuilder buildLayout(List<Album> albums) {
+    var grid = LayoutBuilder(builder: (context, constraints) {
+      return GridView.builder(
+        primary: true,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4, crossAxisSpacing: 0.0, mainAxisSpacing: 0.0),
+        itemCount: albums.length,
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          return buildAlbumInfo(albums[index]);
+        },
+      );
+    });
+    return grid;
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -106,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Form(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
                 padding:
